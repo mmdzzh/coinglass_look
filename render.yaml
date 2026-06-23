@@ -1,0 +1,33 @@
+services:
+  - type: web
+    name: coinglass-look
+    runtime: docker
+    repo: https://github.com/mmdzzh/coinglass_look.git
+    branch: main
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerCommand: sh ./render-entrypoint.sh
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: coinglass-db
+          property: connectionString
+      - key: DATA_SOURCES
+        value: bybit,binance
+      - key: DEFAULT_DATA_SOURCE
+        value: bybit
+      - key: BINANCE_FAPI_BASE
+        value: https://fapi.binance.com
+      - key: BYBIT_API_BASE
+        value: https://api.bybit.com
+      - key: COINGLASS_API_BASE
+        value: https://open-api-v4.coinglass.com
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    healthCheckPath: /api/sources
+
+databases:
+  - name: coinglass-db
+    databaseName: coinglass
+    user: coinglass
+    plan: free

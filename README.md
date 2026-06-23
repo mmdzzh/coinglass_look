@@ -119,7 +119,29 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 Caddy 会自动为 `DOMAIN` 申请 Let's Encrypt 证书。稍等片刻后访问 `https://你的域名` 即可。
 
-### 方案 B：Systemd + Nginx/Caddy
+### 方案 B：Render 免费部署（适合演示）
+
+Render 提供免费 Web Service + PostgreSQL（数据库免费 90 天），无需自己准备服务器和域名。
+
+1. Fork 或导入仓库到 GitHub（已帮你上传至 `https://github.com/mmdzzh/coinglass_look`）。
+2. 访问 [Render Dashboard](https://dashboard.render.com/)。
+3. 点击 **New + → Blueprint**，粘贴仓库地址，选择 `render.yaml`。
+4. Render 会自动创建：
+   - `coinglass-look` Web Service（免费档）
+   - `coinglass-db` PostgreSQL（免费 90 天）
+5. 部署完成后，Render 会给你一个 `https://xxx.onrender.com` 域名。
+
+**注意**：Render 免费 Web Service 在 15 分钟无访问后会休眠，再次访问需要 30 秒左右冷启动。免费 PostgreSQL 90 天后会被删除，如需长期运行请升级或迁移数据。
+
+**首次同步数据**：部署完成后，在 Render Dashboard 打开 Web Service 的 Shell，执行：
+
+```bash
+python sync_once.py
+python sync_intervals.py bybit --intervals 4h 1h 15m 5m
+python sync_intervals.py binance --intervals 4h 1h 15m 5m
+```
+
+### 方案 C：Systemd + Nginx/Caddy
 
 如果不想用 Docker，可参考 `deploy/coinglass.service` 与 `deploy/Caddyfile` 手动配置 systemd 服务和反向代理。
 
