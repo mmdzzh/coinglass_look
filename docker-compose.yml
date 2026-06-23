@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: coinglass_db
+    environment:
+      POSTGRES_USER: coinglass
+      POSTGRES_PASSWORD: coinglass
+      POSTGRES_DB: coinglass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coinglass -d coinglass"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: coinglass_web
+    environment:
+      DATABASE_URL: postgresql+psycopg2://coinglass:coinglass@db:5432/coinglass
+      BINANCE_FAPI_BASE: https://fapi.binance.com
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    restart: unless-stopped
+
+volumes:
+  pgdata:

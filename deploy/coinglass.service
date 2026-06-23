@@ -1,0 +1,17 @@
+[Unit]
+Description=Crypto OI Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/coinglass_
+Environment=PATH=/opt/coinglass_/.venv/bin
+EnvironmentFile=/opt/coinglass_/.env
+ExecStart=/opt/coinglass_/.venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

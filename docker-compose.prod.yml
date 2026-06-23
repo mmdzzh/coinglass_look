@@ -1,0 +1,64 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: coinglass_db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-coinglass}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-coinglass}
+      POSTGRES_DB: ${POSTGRES_DB:-coinglass}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-coinglass} -d ${POSTGRES_DB:-coinglass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - coinglass
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: coinglass_web
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg2://coinglass:coinglass@db:5432/coinglass}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - coinglass
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: coinglass_caddy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${DOMAIN:-localhost}
+    depends_on:
+      - web
+    restart: unless-stopped
+    networks:
+      - coinglass
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+networks:
+  coinglass:
+    driver: bridge

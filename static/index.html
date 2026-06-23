@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto OI Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="top-bar">
+        <div class="brand">
+            <div class="logo">OI</div>
+            <div>
+                <h1>Crypto Open Interest</h1>
+                <span class="subtitle">Multi-exchange futures OI dashboard</span>
+            </div>
+        </div>
+        <div class="top-controls">
+            <div class="control-group">
+                <label>数据源</label>
+                <select id="sourceSelect"></select>
+            </div>
+            <div class="control-group">
+                <label>交易对</label>
+                <select id="symbolSelect"></select>
+            </div>
+            <div class="control-group">
+                <label>搜索合约</label>
+                <input type="text" id="symbolSearch" list="symbolList" placeholder="输入合约名..." autocomplete="off">
+                <datalist id="symbolList"></datalist>
+            </div>
+            <button id="syncBtn" class="secondary">立即同步</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="market-overview">
+            <div class="overview-card">
+                <div class="ov-label">总持仓价值 (24h)</div>
+                <div class="ov-value" id="totalOiValue">-</div>
+                <div class="ov-change" id="totalOiChange">-</div>
+            </div>
+            <div class="overview-card">
+                <div class="ov-label">当前选中 OI 价值</div>
+                <div class="ov-value" id="activeOiValue">-</div>
+            </div>
+            <div class="overview-card">
+                <div class="ov-label">当前选中 OI (币)</div>
+                <div class="ov-value" id="activeOi">-</div>
+            </div>
+            <div class="overview-card">
+                <div class="ov-label">上市时间</div>
+                <div class="ov-value" id="activeOnboard">-</div>
+            </div>
+        </section>
+
+        <section class="dashboard-grid">
+            <div class="panel chart-panel">
+                <div class="panel-header">
+                    <div class="interval-tabs">
+                        <button data-interval="5m">5m</button>
+                        <button data-interval="15m">15m</button>
+                        <button data-interval="1h">1h</button>
+                        <button data-interval="4h">4h</button>
+                        <button data-interval="1d" class="active">1d</button>
+                        <button data-interval="1w">1w</button>
+                        <button data-interval="1M">1M</button>
+                    </div>
+                    <div class="chart-actions">
+                        <input type="date" id="startDate">
+                        <span>至</span>
+                        <input type="date" id="endDate">
+                        <button id="loadBtn" class="primary">加载</button>
+                    </div>
+                </div>
+                <div id="oiChart" style="width: 100%; height: 460px;"></div>
+            </div>
+
+            <div class="panel ranking-panel">
+                <div class="panel-title">持仓量排行榜</div>
+                <table id="latestTable" class="display compact" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>交易对</th>
+                            <th>OI 价值</th>
+                            <th>OI 数量</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="panel stats-panel">
+            <div class="panel-title">24h 变化榜</div>
+            <table id="changeTable" class="display compact" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>交易对</th>
+                        <th>当前 OI 价值</th>
+                        <th>24h 前 OI 价值</th>
+                        <th>变化</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer>
+        <p>数据来自币安 / Bybit / Coinglass API · 自动同步周期见配置</p>
+    </footer>
+
+    <script src="/static/app.js?v=202606230310"></script>
+</body>
+</html>
