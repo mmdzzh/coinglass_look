@@ -91,7 +91,7 @@ docker-compose up --build -d
 git init
 git add .
 git commit -m "init"
-git remote add origin <你的仓库地址>
+git remote add origin https://github.com/mmdzzh/coinglass_look.git
 git push -u origin main
 ```
 
@@ -99,17 +99,17 @@ git push -u origin main
 
 ```bash
 # 登录服务器后
-export REPO_URL=<你的仓库地址>
+export REPO_URL=https://github.com/mmdzzh/coinglass_look.git
 export DOMAIN=oi.example.com
 export ACME_EMAIL=your-email@example.com
 
-curl -fsSL https://raw.githubusercontent.com/<你的仓库>/main/deploy/deploy.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/mmdzzh/coinglass_look/main/deploy/deploy.sh | sudo bash
 ```
 
 或手动操作：
 
 ```bash
-git clone <你的仓库地址> /opt/coinglass_
+git clone https://github.com/mmdzzh/coinglass_look.git /opt/coinglass_
 cd /opt/coinglass_
 cp .env.example .env
 # 编辑 .env：设置 DOMAIN、ACME_EMAIL、COINGLASS_API_KEY 等

@@ -5,7 +5,7 @@ set -euo pipefail
 # Usage: run on the server after cloning the repo
 
 APP_DIR="/opt/coinglass_"
-REPO_URL="${REPO_URL:-}"
+REPO_URL="${REPO_URL:-https://github.com/mmdzzh/coinglass_look.git}"
 DOMAIN="${DOMAIN:-}"
 ACME_EMAIL="${ACME_EMAIL:-}"
 
