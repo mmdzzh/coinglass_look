@@ -75,15 +75,17 @@ docker-compose up --build -d
 
 ## 部署上线
 
-以下方案任选其一。生产环境推荐使用 **Docker Compose + Caddy**，可自动申请 HTTPS 证书。
+以下方案任选其一。
 
-### 前置准备
+### 方案 A：阿里云 ECS 部署（国内用户推荐）
 
-1. 一台公网服务器（如 Ubuntu 22.04/24.04）。
-2. 一个域名解析到该服务器公网 IP。
-3. 服务器已开放 80/443 端口。
+详细步骤见 [`deploy/ALIBABA_CLOUD.md`](deploy/ALIBABA_CLOUD.md)。
 
-### 方案 A：Docker Compose + Caddy（推荐）
+适合已有域名、希望稳定长期运行的国内用户。费用约 50-100 元/月，需完成域名 ICP 备案。
+
+### 方案 B：Docker Compose + Caddy（通用 VPS）
+
+前置准备：一台公网服务器（如 Ubuntu 22.04/24.04）、一个域名解析到服务器、开放 80/443 端口。
 
 #### 1. 推送代码到 Git 仓库
 
@@ -119,33 +121,22 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 Caddy 会自动为 `DOMAIN` 申请 Let's Encrypt 证书。稍等片刻后访问 `https://你的域名` 即可。
 
-### 方案 B：Render 免费部署（适合演示）
+### 方案 C：Render 免费部署（适合演示）
 
 Render 提供免费 Web Service + PostgreSQL（数据库免费 90 天），无需自己准备服务器和域名。
 
-1. Fork 或导入仓库到 GitHub（已帮你上传至 `https://github.com/mmdzzh/coinglass_look`）。
-2. 访问 [Render Dashboard](https://dashboard.render.com/)。
-3. 点击 **New + → Blueprint**，粘贴仓库地址，选择 `render.yaml`。
-4. Render 会自动创建：
-   - `coinglass-look` Web Service（免费档）
-   - `coinglass-db` PostgreSQL（免费 90 天）
-5. 部署完成后，Render 会给你一个 `https://xxx.onrender.com` 域名。
+1. 访问 [Render Dashboard](https://dashboard.render.com/)。
+2. 点击 **New + → Blueprint**，粘贴仓库地址 `https://github.com/mmdzzh/coinglass_look`，选择 `render.yaml`。
+3. Render 会自动创建 Web Service 和 PostgreSQL。
+4. 部署完成后会分配 `https://xxx.onrender.com` 域名。
 
-**注意**：Render 免费 Web Service 在 15 分钟无访问后会休眠，再次访问需要 30 秒左右冷启动。免费 PostgreSQL 90 天后会被删除，如需长期运行请升级或迁移数据。
+**限制**：免费 Web Service 15 分钟无访问会休眠；免费 PostgreSQL 90 天后删除。
 
-**首次同步数据**：部署完成后，在 Render Dashboard 打开 Web Service 的 Shell，执行：
+### 方案 D：Systemd + Nginx/Caddy
 
-```bash
-python sync_once.py
-python sync_intervals.py bybit --intervals 4h 1h 15m 5m
-python sync_intervals.py binance --intervals 4h 1h 15m 5m
-```
+不想用 Docker 可参考 `deploy/coinglass.service` 与 `deploy/Caddyfile` 手动配置。
 
-### 方案 C：Systemd + Nginx/Caddy
-
-如果不想用 Docker，可参考 `deploy/coinglass.service` 与 `deploy/Caddyfile` 手动配置 systemd 服务和反向代理。
-
-### 方案 C：本地快速验证
+### 本地快速验证
 
 ```bash
 cp .env.example .env
