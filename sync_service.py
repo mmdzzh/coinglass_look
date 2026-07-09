@@ -143,6 +143,18 @@ class SyncService:
             metas = db.query(SymbolMeta).filter(SymbolMeta.active == True, SymbolMeta.source == source).all()
             symbols = [m.symbol for m in metas]
 
+        # Lookback window per interval so that coarse-grained candles are not
+        # missed when last_oi_sync_at is just a few hours ago.
+        LOOKBACK = {
+            "5m": timedelta(hours=2),
+            "15m": timedelta(hours=2),
+            "1h": timedelta(hours=4),
+            "4h": timedelta(hours=8),
+            "1d": timedelta(days=2),
+            "1w": timedelta(days=7),
+            "1M": timedelta(days=30),
+        }
+
         stats = {"source": source, "symbols": len(symbols), "intervals": len(intervals), "rows": 0}
         for idx, symbol in enumerate(symbols):
             for interval in intervals:
@@ -153,7 +165,7 @@ class SyncService:
                         .first()
                     )
                     if meta and meta.last_oi_sync_at:
-                        start_time = _ensure_aware(meta.last_oi_sync_at) - timedelta(hours=2)
+                        start_time = _ensure_aware(meta.last_oi_sync_at) - LOOKBACK.get(interval, timedelta(hours=2))
                     else:
                         start_time = datetime.now(timezone.utc) - timedelta(
                             days=BACKFILL_DAYS.get(interval, 7)
@@ -217,16 +229,15 @@ class SyncService:
             return 0
 
         # Query existing records for all symbols/timestamps in this batch.
-        # SQLite stores DateTime(timezone=True) as naive UTC, so compare naive values.
         symbols = list({r["symbol"] for r in unique_rows})
-        naive_timestamps = [r["timestamp"].replace(tzinfo=None) for r in unique_rows]
+        aware_timestamps = [r["timestamp"] for r in unique_rows]
         existing = (
             db.query(OpenInterest.symbol, OpenInterest.source, OpenInterest.interval, OpenInterest.timestamp)
             .filter(
                 OpenInterest.symbol.in_(symbols),
                 OpenInterest.source == source,
                 OpenInterest.interval == interval,
-                OpenInterest.timestamp.in_(naive_timestamps),
+                OpenInterest.timestamp.in_(aware_timestamps),
             )
             .all()
         )
@@ -265,8 +276,9 @@ def _ensure_aware(dt: Optional[datetime]) -> Optional[datetime]:
 def run_scheduled_sync(intervals: Optional[List[str]] = None):
     """Entry point for APScheduler job. Syncs all enabled data sources.
 
-    By default only the daily interval is synced during scheduled runs to keep
-    the job duration well within the scheduling period and avoid API rate limits.
+    By default all non-weekly/monthly intervals are synced.  Callers
+    (e.g. APScheduler jobs in main.py) should pass a specific list
+    such as ``["4h"]`` so that each interval runs on its own cadence.
     """
     from config import DATA_SOURCES
     from data_sources import BinanceDataSource, BybitDataSource, CoinglassDataSource
@@ -278,7 +290,7 @@ def run_scheduled_sync(intervals: Optional[List[str]] = None):
     }
 
     if intervals is None:
-        intervals = ["1d"]
+        intervals = [i for i in DISPLAY_INTERVALS if i not in ("1w", "1M")]
 
     db = SessionLocal()
     try:

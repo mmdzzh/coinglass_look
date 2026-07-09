@@ -30,7 +30,22 @@ function formatDate(isoString) {
 }
 
 function toInputValue(date) {
-    return date.toISOString().slice(0, 10);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function toEndOfDayISO(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr + 'T23:59:59');
+    return d.toISOString();
+}
+
+function toStartOfDayISO(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr + 'T00:00:00');
+    return d.toISOString();
 }
 
 function setLoading(el, text = '-') {
@@ -208,8 +223,8 @@ async function loadChart() {
     const start = document.getElementById('startDate').value;
     const end = document.getElementById('endDate').value;
     const params = new URLSearchParams({ source: currentSource, interval: currentInterval });
-    if (start) params.append('start', new Date(start).toISOString());
-    if (end) params.append('end', new Date(end).toISOString());
+    if (start) params.append('start', toStartOfDayISO(start));
+    if (end) params.append('end', toEndOfDayISO(end));
 
     const res = await fetch(`${API_BASE}/api/oi/${currentSymbol}?${params.toString()}`);
     const json = await res.json();

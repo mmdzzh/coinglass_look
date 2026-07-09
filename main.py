@@ -23,17 +23,21 @@ logger = logging.getLogger(__name__)
 
 def _start_scheduler():
     scheduler = BackgroundScheduler()
-    # Use the shortest configured interval as the main tick, but cap at 5 minutes
-    min_minutes = min(UPDATE_MINUTES.values())
-    scheduler.add_job(
-        run_scheduled_sync,
-        trigger=IntervalTrigger(minutes=max(min_minutes, 5)),
-        id="oi_sync",
-        replace_existing=True,
-        coalesce=True,
-    )
+    # Register a separate job for each interval so that each interval is
+    # refreshed at its own configured cadence (UPDATE_MINUTES).
+    for interval, minutes in UPDATE_MINUTES.items():
+        if interval in ("1w", "1M"):
+            continue
+        scheduler.add_job(
+            run_scheduled_sync,
+            trigger=IntervalTrigger(minutes=minutes),
+            id=f"oi_sync_{interval}",
+            replace_existing=True,
+            coalesce=True,
+            kwargs={"intervals": [interval]},
+        )
+        logger.info(f"Scheduled incremental sync for {interval} every {minutes} minutes.")
     scheduler.start()
-    logger.info(f"Started background scheduler with {max(min_minutes, 5)} minute interval.")
     return scheduler
 
 
